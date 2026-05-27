@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You ❤️</title>
+    <style>
+        /* --- DESIGN TOKENS & SYSTEM VARIABLES --- */
+        :root {
+            --bg-dark: #09090b;
+            --glass-bg: rgba(30, 30, 36, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(16px);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --accent-color: #a855f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #2e1065 0%, #000000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* --- PHONE HARDWARE FRAME --- */
+        .device-frame {
+            width: 100%;
+            max-width: 360px;
+            height: 100vh;
+            max-height: 760px;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 400px) {
+            .device-frame {
+                border: 10px solid #1f1f22;
+                border-radius: 44px;
+            }
+        }
+
+        /* --- STATUS BAR --- */
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 100;
+            pointer-events: none;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        /* --- LOCK SCREEN --- */
+        .lock-screen {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url('pics/6.jpg') center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 80px 20px 50px;
+            z-index: 90;
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+        }
+
+        .lock-screen.unlocked {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .clock-container {
+            text-align: center;
+        }
+
+        .lock-time {
+            font-size: 76px;
+            font-weight: 200;
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+
+        .lock-date {
+            font-size: 18px;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        .unlock-hint {
+            font-size: 15px;
+            font-weight: 500;
+            padding: 12px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* --- HOME SCREEN --- */
+        .home-screen {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.9)), url('pics/6.jpg') center/cover;
+            padding: 70px 24px 20px;
+            z-index: 10;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px 16px;
+        }
+
+        .app-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            margin-bottom: 6px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .app-icon-container:active .app-icon {
+            transform: scale(0.85);
+        }
+
+        /* Icon Colors */
+        .bg-music { background: linear-gradient(135deg, #10b981, #047857); }
+        .bg-notes { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .bg-photos { background: linear-gradient(135deg, #ec4899, #be185d); }
+        .bg-paint { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+
+        .app-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* --- WINDOW MANAGEMENT --- */
+        .window {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        .window.active {
+            transform: translateX(0);
+        }
+
+        .nav-bar {
+            height: 60px;
+            padding: 20px 16px 0;
+            display: flex;
+            align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px;
+        }
+
+        /* --- APP: MUSIC --- */
+        .player-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .album-art {
+            width: 240px;
+            height: 240px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+        }
+
+        .song-info h2 { font-size: 22px; margin-bottom: 5px; }
+        .song-info p { color: var(--text-muted); font-size: 16px; margin-bottom: 30px; }
+
+        .lyrics-box {
+            width: 100%;
+            height: 250px;
+            overflow-y: auto;
+            mask-image: linear-gradient(transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(transparent, black 15%, black 85%, transparent);
+        }
+
+        .lyrics-box p {
+            font-size: 16px;
+            line-height: 2;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+        .lyrics-box p.active-lyric {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* --- APP: NOTEPAD --- */
+        .letter-paper {
+            background: #fdfbf7;
+            color: #292524;
+            min-height: 100%;
+            border-radius: 12px;
+            padding: 30px 24px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* --- APP: GALLERY --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .photo-item {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 12px;
+            background: #27272a;
+        }
+
+        /* --- APP: CANVAS --- */
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+        #drawingBoard {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            touch-action: none; /* Prevents scrolling while drawing */
+        }
+        .canvas-controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .btn-reset {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="device-frame">
+        
+        <div class="status-bar">
+            <span id="top-time">12:00</span>
+            <span>🔋 100%</span>
+        </div>
+
+        <div class="lock-screen" id="lockScreen" onclick="unlockPhone()">
+            <div class="clock-container">
+                <div class="lock-time" id="main-time">12:00</div>
+                <div class="lock-date" id="main-date">Monday, January 1</div>
+            </div>
+            <div class="unlock-hint">Tap to unlock 💜</div>
+        </div>
+
+        <div class="home-screen">
+            <div class="app-grid">
+                <div class="app-icon-container" onclick="openApp('app-music')">
+                    <div class="app-icon bg-music">🎵</div>
+                    <div class="app-label">Our Song</div>
+                </div>
+                <div class="app-icon-container" onclick="openApp('app-notes')">
+                    <div class="app-icon bg-notes">📝</div>
+                    <div class="app-label">Read Me</div>
+                </div>
+                <div class="app-icon-container" onclick="openApp('app-photos')">
+                    <div class="app-icon bg-photos">📸</div>
+                    <div class="app-label">Moments</div>
+                </div>
+                <div class="app-icon-container" onclick="openApp('app-paint')">
+                    <div class="app-icon bg-paint">🎨</div>
+                    <div class="app-label">Canvas</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="window" id="app-music">
+            <div class="nav-bar">
+                <button class="btn-back" onclick="closeApp('app-music')">◀ Home</button>
+                <div class="nav-title">Now Playing</div>
+            </div>
+            <div class="window-content player-container">
+                <img class="album-art" src="pics/7.jpg" alt="Album Art">
+                <div class="song-info">
+                    <h2>Raindance</h2>
+                    <p>Dave, Tems</p>
+                </div>
+                <div class="lyrics-box">
+                    <p class="active-lyric">It's the way my mind fallin' away</p>
+                    <p>In my heart, I know</p>
+                    <p>You feel the same when you're with me</p>
+                    <p>You know I'm all you need</p>
+                    <p>You're where I wanna be</p>
+                    <p>My darling, can't you see?</p>
+                    <p>I love you</p>
+                    <p>I love you</p>
+                    <p>I love you</p>
+                    <p>I love you</p>
+                    <p>I love you</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="window" id="app-notes">
+            <div class="nav-bar">
+                <button class="btn-back" onclick="closeApp('app-notes')">◀ Home</button>
+                <div class="nav-title">Love Letter</div>
+            </div>
+            <div class="window-content">
+                <div class="letter-paper">Babe,
+
+I want to build a future with you, one filled with love, laughter, and endless adventures. Please bare with me as I'm sometimes stubborn,   hard headed and sommetimes insensitive but I will always do my best to be better.
+Thank you for being my number one hater/supporter. Please know that I will always be here for you, through hard times and good times. I will always love you, support you and make you happy.
+
+Forever yours,
+Timothy ❤️</div>
+            </div>
+        </div>
+
+        <div class="window" id="app-photos">
+            <div class="nav-bar">
+                <button class="btn-back" onclick="closeApp('app-photos')">◀ Home</button>
+                <div class="nav-title">Our Memories</div>
+            </div>
+            <div class="window-content photo-grid">
+    <div class="photo-card">
+        <img class="photo-item" src="pics/1.jpg" alt="Us 1">
+        <div class="photo-caption">I love you even tho we just met. You gave me reasons to persue you and pray that we'll be together forever</div>
+    </div>
+    
+    <div class="photo-card">
+        <img class="photo-item" src="pics/2.jpg" alt="Us 2">
+        <div class="photo-caption">Even I didn't have the money, you covered for me. I love you for being always there for me</div>
+    </div>
+    
+    <div class="photo-card">
+        <img class="photo-item" src="pics/3.jpg" alt="Us 3">
+        <div class="photo-caption">This is us when we're just starting, and I'm totally in love with you </div>
+    </div>
+    
+    <div class="photo-card">
+        <img class="photo-item" src="pics/4.jpg" alt="Us 4">
+        <div class="photo-caption">You are the most beautiful person I know, and I'm so grateful to have you in my life. Please bare with me</div>
+    </div>
+</div>
+        </div>
+
+        <div class="window" id="app-paint">
+            <div class="nav-bar">
+                <button class="btn-back" onclick="closeApp('app-paint')">◀ Home</button>
+                <div class="nav-title">Canvas</div>
+            </div>
+            <div class="window-content canvas-wrapper">
+                <canvas id="drawingBoard" width="320" height="460"></canvas>
+                <div class="canvas-controls">
+                    <span>This tulips remind me of you soft, beautiful, comforting, and impossible to ignore. Just like them, you quietly made my life brighter without even trying. Every time I see tulips, I’m reminded of how lucky I am to have you. 🌸</span>
+                    <button class="btn-reset" onclick="resetCanvas()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CLOCK & DATE LOGIC ---
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            // Format for lock screen
+            let displayHours = hours % 12 || 12;
+            let displayMinutes = minutes < 10 ? '0' + minutes : minutes;
+            let timeStr = `${displayHours}:${displayMinutes}`;
+            
+            document.getElementById('top-time').textContent = timeStr;
+            document.getElementById('main-time').textContent = timeStr;
+
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('main-date').textContent = now.toLocaleDateString('en-US', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- NAVIGATION LOGIC ---
+        function unlockPhone() {
+            document.getElementById('lockScreen').classList.add('unlocked');
+        }
+
+        function openApp(appId) {
+            document.getElementById(appId).classList.add('active');
+            if (appId === 'app-paint') {
+                initCanvas();
+            }
+        }
+
+        function closeApp(appId) {
+            document.getElementById(appId).classList.remove('active');
+        }
+
+        // --- CANVAS & DRAWING LOGIC ---
+        const canvas = document.getElementById('drawingBoard');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let isInitialized = false;
+
+        function initCanvas() {
+            if (!isInitialized) {
+                drawFlowerBase();
+                isInitialized = true;
+                
+                // Set User Brush Default Styles
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#d946ef'; // Fuchsia pink brush
+            }
+        }
+
+        function drawFlowerBase() {
+            ctx.save();
+            
+            // Size of each pixel block
+            const pS = 16; 
+            
+            // Pixel Art Matrix matching your purple rose image
+            // 0 = empty, 1 = Light Purple, 2 = Mid Purple, 3 = Dark Purple, 4 = Light Green, 5 = Dark Green
+            const pixels = [
+                "         2        ",
+                "     111122       ",
+                "    111222232     ",
+                "   21122222232    ",
+                "  2212222222322   ",
+                " 22212222222322   ",
+                " 22212222222322   ",
+                "  223242222232    ",
+                "  22324422223244  ",
+                "   233244222344   ",
+                "    2333444444    ",
+                "     22334444     ",
+                "   444445544      ",
+                "  444555555       ",
+                "     55 5         ",
+                "        5         ",
+                "        5         ",
+                "        5         "
+            ];
+
+            const colors = {
+                '1': '#d8b4e2', // Light purple
+                '2': '#c55cf2', // Medium purple
+                '3': '#800080', // Dark purple
+                '4': '#00ff00', // Light green
+                '5': '#008000'  // Dark green
+            };
+
+            // Calculate center offset so the flower sits in the middle of the canvas
+            const gridWidth = pixels[0].length * pS;
+            const startX = (canvas.width - gridWidth) / 2;
+            const startY = 60;
+
+            for (let row = 0; row < pixels.length; row++) {
+                for (let col = 0; col < pixels[row].length; col++) {
+                    const char = pixels[row][col];
+                    if (colors[char]) {
+                        ctx.fillStyle = colors[char];
+                        ctx.fillRect(startX + (col * pS), startY + (row * pS), pS, pS);
+                    }
+                }
+            }
+
+            ctx.restore();
+        }
+
+        function resetCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawFlowerBase();
+            
+            // Re-apply User Brush Settings after clear
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#d946ef';
+        }
+
+        // Pointer Event Tracking (Mouse & Touch)
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath(); // Reset path so next stroke doesn't connect
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // Prevents touch scrolling
+
+            const rect = canvas.getBoundingClientRect();
+            // Handle both touch and mouse coordinates safely
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            
+            // Calculate accurate scale based on CSS size vs actual canvas size
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        // Event Listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchmove', draw, { passive: false });
+
+    </script>
+</body>
+</html>
