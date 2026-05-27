@@ -311,14 +311,21 @@
             background: #ffffff;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            touch-action: none; /* Prevents scrolling while drawing */
+            touch-action: none;
         }
         .canvas-controls {
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
             margin-top: 20px;
+            gap: 12px;
+        }
+        .canvas-controls span {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            text-align: center;
         }
         .btn-reset {
             background: #ef4444;
@@ -380,6 +387,13 @@
                     <h2>Raindance</h2>
                     <p>Dave, Tems</p>
                 </div>
+
+                <audio id="music-player" src="song.mp3"></audio>
+
+                <div style="margin-bottom: 20px;">
+                    <button id="play-pause-btn" onclick="togglePlay()" style="background: #a855f7; color: white; border: none; padding: 12px 28px; border-radius: 20px; font-weight: bold; cursor: pointer; min-width: 110px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);">▶ Play</button>
+                </div>
+
                 <div class="lyrics-box">
                     <p class="active-lyric">It's the way my mind fallin' away</p>
                     <p>In my heart, I know</p>
@@ -404,7 +418,7 @@
             <div class="window-content">
                 <div class="letter-paper">Babe,
 
-I want to build a future with you, one filled with love, laughter, and endless adventures. Please bare with me as I'm sometimes stubborn,   hard headed and sommetimes insensitive but I will always do my best to be better.
+I want to build a future with you, one filled with love, laughter, and endless adventures. Please bare with me as I'm sometimes stubborn, hard headed and sommetimes insensitive but I will always do my best to be better.
 Thank you for being my number one hater/supporter. Please know that I will always be here for you, through hard times and good times. I will always love you, support you and make you happy.
 
 Forever yours,
@@ -418,26 +432,26 @@ Timothy ❤️</div>
                 <div class="nav-title">Our Memories</div>
             </div>
             <div class="window-content photo-grid">
-    <div class="photo-card">
-        <img class="photo-item" src="1.jpg" alt="Us 1">
-        <div class="photo-caption">I love you even tho we just met. You gave me reasons to persue you and pray that we'll be together forever</div>
-    </div>
-    
-    <div class="photo-card">
-        <img class="photo-item" src="2.jpg" alt="Us 2">
-        <div class="photo-caption">Even I didn't have the money, you covered for me. I love you for being always there for me</div>
-    </div>
-    
-    <div class="photo-card">
-        <img class="photo-item" src="3.jpg" alt="Us 3">
-        <div class="photo-caption">This is us when we're just starting, and I'm totally in love with you </div>
-    </div>
-    
-    <div class="photo-card">
-        <img class="photo-item" src="4.jpg" alt="Us 4">
-        <div class="photo-caption">You are the most beautiful person I know, and I'm so grateful to have you in my life. Please bare with me</div>
-    </div>
-</div>
+                <div class="photo-card">
+                    <img class="photo-item" src="1.jpg" alt="Us 1">
+                    <div class="photo-caption">I love you even tho we just met. You gave me reasons to persue you and pray that we'll be together forever</div>
+                </div>
+                
+                <div class="photo-card">
+                    <img class="photo-item" src="2.jpg" alt="Us 2">
+                    <div class="photo-caption">Even I didn't have the money, you covered for me. I love you for being always there for me</div>
+                </div>
+                
+                <div class="photo-card">
+                    <img class="photo-item" src="3.jpg" alt="Us 3">
+                    <div class="photo-caption">This is us when we're just starting, and I'm totally in love with you </div>
+                </div>
+                
+                <div class="photo-card">
+                    <img class="photo-item" src="4.jpg" alt="Us 4">
+                    <div class="photo-caption">You are the most beautiful person I know, and I'm so grateful to have you in my life. Please bare with me</div>
+                </div>
+            </div>
         </div>
 
         <div class="window" id="app-paint">
@@ -457,70 +471,138 @@ Timothy ❤️</div>
     </div>
 
     <script>
+        // --- GLOBAL STATE VARIABLES ---
+        let isDrawing = false;
+        let isInitialized = false;
+
+        // --- INITIALIZE EVERYTHING ON RUNTIME ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            const canvas = document.getElementById('drawingBoard');
+            if (canvas) {
+                canvas.addEventListener('mousedown', startDrawing);
+                canvas.addEventListener('mouseup', stopDrawing);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseout', stopDrawing);
+
+                canvas.addEventListener('touchstart', startDrawing, { passive: false });
+                canvas.addEventListener('touchend', stopDrawing);
+                canvas.addEventListener('touchmove', draw, { passive: false });
+            }
+
+            // Sync button layout with player state automatically
+            const musicPlayer = document.getElementById('music-player');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            
+            if (musicPlayer && playPauseBtn) {
+                musicPlayer.addEventListener('play', () => {
+                    playPauseBtn.innerHTML = "⏸ Pause";
+                });
+                musicPlayer.addEventListener('pause', () => {
+                    playPauseBtn.innerHTML = "▶ Play";
+                });
+            }
+        });
+
         // --- CLOCK & DATE LOGIC ---
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
             let minutes = now.getMinutes();
-            let ampm = hours >= 12 ? 'PM' : 'AM';
             
-            // Format for lock screen
             let displayHours = hours % 12 || 12;
             let displayMinutes = minutes < 10 ? '0' + minutes : minutes;
             let timeStr = `${displayHours}:${displayMinutes}`;
             
-            document.getElementById('top-time').textContent = timeStr;
-            document.getElementById('main-time').textContent = timeStr;
+            const topTime = document.getElementById('top-time');
+            const mainTime = document.getElementById('main-time');
+            const mainDate = document.getElementById('main-date');
 
-            const options = { weekday: 'long', month: 'long', day: 'numeric' };
-            document.getElementById('main-date').textContent = now.toLocaleDateString('en-US', options);
+            if (topTime) topTime.textContent = timeStr;
+            if (mainTime) mainTime.textContent = timeStr;
+
+            if (mainDate) {
+                const options = { weekday: 'long', month: 'long', day: 'numeric' };
+                mainDate.textContent = now.toLocaleDateString('en-US', options);
+            }
         }
-        setInterval(updateClock, 1000);
-        updateClock();
 
         // --- NAVIGATION LOGIC ---
         function unlockPhone() {
-            document.getElementById('lockScreen').classList.add('unlocked');
+            const lockScreen = document.getElementById('lockScreen');
+            if (lockScreen) {
+                lockScreen.classList.add('unlocked');
+            }
         }
 
+        // --- BUTTON CLICK TOGGLE ---
+        function togglePlay() {
+            const musicPlayer = document.getElementById('music-player');
+            if (!musicPlayer) return;
+
+            if (musicPlayer.paused) {
+                musicPlayer.play().catch(e => console.log("Playback blocked:", e));
+            } else {
+                musicPlayer.pause();
+            }
+        }
+
+        // --- OPEN APP LOGIC ---
         function openApp(appId) {
-            document.getElementById(appId).classList.add('active');
+            const app = document.getElementById(appId);
+            if (app) {
+                app.classList.add('active');
+            }
+            
+            if (appId === 'app-music') {
+                const musicPlayer = document.getElementById('music-player');
+                if (musicPlayer) {
+                    musicPlayer.play().catch(e => console.log("Autoplay paused. Awaiting click context."));
+                }
+            }
+            
             if (appId === 'app-paint') {
                 initCanvas();
             }
         }
 
+        // --- CLOSE APP LOGIC ---
         function closeApp(appId) {
-            document.getElementById(appId).classList.remove('active');
-        }
-
-        // --- CANVAS & DRAWING LOGIC ---
-        const canvas = document.getElementById('drawingBoard');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let isInitialized = false;
-
-        function initCanvas() {
-            if (!isInitialized) {
-                drawFlowerBase();
-                isInitialized = true;
-                
-                // Set User Brush Default Styles
-                ctx.lineWidth = 4;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = '#d946ef'; // Fuchsia pink brush
+            const app = document.getElementById(appId);
+            if (app) {
+                app.classList.remove('active');
+            }
+            
+            if (appId === 'app-music') {
+                const musicPlayer = document.getElementById('music-player');
+                if (musicPlayer) {
+                    musicPlayer.pause();
+                }
             }
         }
 
-        function drawFlowerBase() {
+        // --- CANVAS & DRAWING LOGIC ---
+        function initCanvas() {
+            const canvas = document.getElementById('drawingBoard');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            if (!isInitialized && ctx) {
+                drawFlowerBase(canvas, ctx);
+                isInitialized = true;
+                
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#d946ef';
+            }
+        }
+
+        function drawFlowerBase(canvas, ctx) {
             ctx.save();
-            
-            // Size of each pixel block
             const pS = 16; 
-            
-            // Pixel Art Matrix matching your purple rose image
-            // 0 = empty, 1 = Light Purple, 2 = Mid Purple, 3 = Dark Purple, 4 = Light Green, 5 = Dark Green
             const pixels = [
                 "         2        ",
                 "     111122       ",
@@ -543,14 +625,9 @@ Timothy ❤️</div>
             ];
 
             const colors = {
-                '1': '#d8b4e2', // Light purple
-                '2': '#c55cf2', // Medium purple
-                '3': '#800080', // Dark purple
-                '4': '#00ff00', // Light green
-                '5': '#008000'  // Dark green
+                '1': '#d8b4e2', '2': '#c55cf2', '3': '#800080', '4': '#00ff00', '5': '#008000'
             };
 
-            // Calculate center offset so the flower sits in the middle of the canvas
             const gridWidth = pixels[0].length * pS;
             const startX = (canvas.width - gridWidth) / 2;
             const startY = 60;
@@ -564,42 +641,51 @@ Timothy ❤️</div>
                     }
                 }
             }
-
             ctx.restore();
         }
 
         function resetCanvas() {
+            const canvas = document.getElementById('drawingBoard');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawFlowerBase();
+            drawFlowerBase(canvas, ctx);
             
-            // Re-apply User Brush Settings after clear
             ctx.lineWidth = 4;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.strokeStyle = '#d946ef';
         }
 
-        // Pointer Event Tracking (Mouse & Touch)
         function startDrawing(e) {
             isDrawing = true;
             draw(e);
         }
 
+        // Event coordination trackers
         function stopDrawing() {
             isDrawing = false;
-            ctx.beginPath(); // Reset path so next stroke doesn't connect
+            const canvas = document.getElementById('drawingBoard');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) ctx.beginPath();
+            }
         }
 
         function draw(e) {
             if (!isDrawing) return;
-            e.preventDefault(); // Prevents touch scrolling
+            const canvas = document.getElementById('drawingBoard');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            
+            e.preventDefault();
 
             const rect = canvas.getBoundingClientRect();
-            // Handle both touch and mouse coordinates safely
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             
-            // Calculate accurate scale based on CSS size vs actual canvas size
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
 
@@ -611,17 +697,6 @@ Timothy ❤️</div>
             ctx.beginPath();
             ctx.moveTo(x, y);
         }
-
-        // Event Listeners
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseout', stopDrawing);
-
-        canvas.addEventListener('touchstart', startDrawing, { passive: false });
-        canvas.addEventListener('touchend', stopDrawing);
-        canvas.addEventListener('touchmove', draw, { passive: false });
-
     </script>
 </body>
 </html>
