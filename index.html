@@ -232,44 +232,134 @@
             padding: 20px;
         }
 
-        /* --- APP: MUSIC --- */
+        /* --- APP: MUSIC (REDESIGNED PLAYER) --- */
         .player-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-align: center;
+            padding-top: 40px;
         }
         
         .album-art {
-            width: 240px;
-            height: 240px;
-            border-radius: 12px;
+            width: 280px;
+            height: 280px;
+            border-radius: 16px;
             object-fit: cover;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
-        .song-info h2 { font-size: 22px; margin-bottom: 5px; }
-        .song-info p { color: var(--text-muted); font-size: 16px; margin-bottom: 30px; }
-
-        .lyrics-box {
+        .song-info {
             width: 100%;
-            height: 250px;
-            overflow-y: auto;
-            mask-image: linear-gradient(transparent, black 15%, black 85%, transparent);
-            -webkit-mask-image: linear-gradient(transparent, black 15%, black 85%, transparent);
+            text-align: left;
+            padding: 0 20px;
+            margin-bottom: 25px;
         }
 
-        .lyrics-box p {
-            font-size: 16px;
-            line-height: 2;
-            color: var(--text-muted);
-            margin-bottom: 15px;
-        }
-        .lyrics-box p.active-lyric {
-            color: #ffffff;
+        .song-info h2 { 
+            font-size: 24px; 
+            margin-bottom: 5px; 
             font-weight: 700;
-            font-size: 18px;
+        }
+        
+        .song-info p { 
+            color: var(--text-muted); 
+            font-size: 16px; 
+        }
+
+        /* Music Controls UI */
+        .music-controls-wrapper {
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .progress-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .time-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 35px;
+        }
+
+        .progress-bar-bg {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress-bar-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 2px;
+            width: 0%;
+            pointer-events: none;
+        }
+
+        .progress-bar-handle {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background: #ffffff;
+            border-radius: 50%;
+            pointer-events: none;
+            left: 0%;
+        }
+
+        .playback-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .btn-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .play-pause-btn {
+            width: 64px;
+            height: 64px;
+            background: #ffffff;
+            border-radius: 50%;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .play-pause-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
         }
 
         /* --- APP: NOTEPAD --- */
@@ -381,8 +471,10 @@
                 <button class="btn-back" onclick="closeApp('app-music')">◀ Home</button>
                 <div class="nav-title">Now Playing</div>
             </div>
+            
             <div class="window-content player-container">
                 <img class="album-art" src="7.jpg" alt="Album Art">
+                
                 <div class="song-info">
                     <h2>Raindance</h2>
                     <p>Dave, Tems</p>
@@ -390,22 +482,51 @@
 
                 <audio id="music-player" src="song.mp3"></audio>
 
-                <div style="margin-bottom: 20px;">
-                    <button id="play-pause-btn" onclick="togglePlay()" style="background: #a855f7; color: white; border: none; padding: 12px 28px; border-radius: 20px; font-weight: bold; cursor: pointer; min-width: 110px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);">▶ Play</button>
-                </div>
+                <div class="music-controls-wrapper">
+                    
+                    <div class="progress-container">
+                        <span class="time-text" id="current-time">0:00</span>
+                        <div class="progress-bar-bg" id="progress-bar-container" onclick="seekSong(event)">
+                            <div class="progress-bar-fill" id="progress-fill"></div>
+                            <div class="progress-bar-handle" id="progress-handle"></div>
+                        </div>
+                        <span class="time-text" id="total-time">0:00</span>
+                    </div>
 
-                <div class="lyrics-box">
-                    <p class="active-lyric">It's the way my mind fallin' away</p>
-                    <p>In my heart, I know</p>
-                    <p>You feel the same when you're with me</p>
-                    <p>You know I'm all you need</p>
-                    <p>You're where I wanna be</p>
-                    <p>My darling, can't you see?</p>
-                    <p>I love you</p>
-                    <p>I love you</p>
-                    <p>I love you</p>
-                    <p>I love you</p>
-                    <p>I love you</p>
+                    <div class="playback-controls">
+                        <button class="control-btn" id="btn-heart" onclick="toggleHeart()">
+                            <svg class="btn-icon" viewBox="0 0 24 24" id="heart-icon">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            </svg>
+                        </button>
+                        
+                        <button class="control-btn" onclick="restartSong()">
+                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                            </svg>
+                        </button>
+
+                        <button class="play-pause-btn" id="play-pause-btn" onclick="togglePlay()">
+                            <svg id="play-icon" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg id="pause-icon" viewBox="0 0 24 24" style="display:none;">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
+                        </button>
+
+                        <button class="control-btn" onclick="restartSong()">
+                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                            </svg>
+                        </button>
+                        
+                        <button class="control-btn">
+                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -492,19 +613,105 @@ Timothy ❤️</div>
                 canvas.addEventListener('touchmove', draw, { passive: false });
             }
 
-            // Sync button layout with player state automatically
+            // Sync music player UI
             const musicPlayer = document.getElementById('music-player');
-            const playPauseBtn = document.getElementById('play-pause-btn');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
             
-            if (musicPlayer && playPauseBtn) {
-                musicPlayer.addEventListener('play', () => {
-                    playPauseBtn.innerHTML = "⏸ Pause";
+            if (musicPlayer) {
+                // Handle metadata load to get duration
+                musicPlayer.addEventListener('loadedmetadata', () => {
+                    document.getElementById('total-time').innerText = formatTime(musicPlayer.duration);
                 });
+
+                // Update UI on play/pause
+                musicPlayer.addEventListener('play', () => {
+                    playIcon.style.display = 'none';
+                    pauseIcon.style.display = 'block';
+                });
+                
                 musicPlayer.addEventListener('pause', () => {
-                    playPauseBtn.innerHTML = "▶ Play";
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                });
+
+                // Update progress bar as song plays
+                musicPlayer.addEventListener('timeupdate', () => {
+                    const currentTime = musicPlayer.currentTime;
+                    const duration = musicPlayer.duration;
+                    
+                    if (duration) {
+                        const progressPercent = (currentTime / duration) * 100;
+                        document.getElementById('progress-fill').style.width = progressPercent + '%';
+                        document.getElementById('progress-handle').style.left = progressPercent + '%';
+                        document.getElementById('current-time').innerText = formatTime(currentTime);
+                    }
+                });
+                
+                // When song ends, reset UI
+                musicPlayer.addEventListener('ended', () => {
+                     playIcon.style.display = 'block';
+                     pauseIcon.style.display = 'none';
+                     musicPlayer.currentTime = 0;
                 });
             }
         });
+
+        // --- MUSIC PLAYER LOGIC ---
+        function togglePlay() {
+            const musicPlayer = document.getElementById('music-player');
+            if (!musicPlayer) return;
+
+            if (musicPlayer.paused) {
+                musicPlayer.play().catch(e => console.log("Playback blocked:", e));
+            } else {
+                musicPlayer.pause();
+            }
+        }
+
+        // Helper to format seconds to M:SS
+        function formatTime(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return min + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        // Clicking the progress bar to seek
+        function seekSong(event) {
+            const musicPlayer = document.getElementById('music-player');
+            const progressBar = document.getElementById('progress-bar-container');
+            if(!musicPlayer || !progressBar || !musicPlayer.duration) return;
+
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = rect.width;
+            
+            const newTime = (clickX / width) * musicPlayer.duration;
+            musicPlayer.currentTime = newTime;
+        }
+
+        // Previous/Next Buttons functionality (Just restart song since there's only 1)
+        function restartSong() {
+            const musicPlayer = document.getElementById('music-player');
+            if (musicPlayer) {
+                musicPlayer.currentTime = 0;
+            }
+        }
+
+        // Heart Button Toggle
+        function toggleHeart() {
+            const heartPath = document.querySelector('#heart-icon path');
+            const currentFill = heartPath.getAttribute('fill');
+            
+            if (currentFill === 'none') {
+                heartPath.setAttribute('fill', '#1db954'); // Spotify Green
+                heartPath.setAttribute('stroke', '#1db954');
+            } else {
+                heartPath.setAttribute('fill', 'none');
+                heartPath.setAttribute('stroke', 'currentColor');
+            }
+        }
+
 
         // --- CLOCK & DATE LOGIC ---
         function updateClock() {
@@ -534,18 +741,6 @@ Timothy ❤️</div>
             const lockScreen = document.getElementById('lockScreen');
             if (lockScreen) {
                 lockScreen.classList.add('unlocked');
-            }
-        }
-
-        // --- BUTTON CLICK TOGGLE ---
-        function togglePlay() {
-            const musicPlayer = document.getElementById('music-player');
-            if (!musicPlayer) return;
-
-            if (musicPlayer.paused) {
-                musicPlayer.play().catch(e => console.log("Playback blocked:", e));
-            } else {
-                musicPlayer.pause();
             }
         }
 
@@ -663,7 +858,6 @@ Timothy ❤️</div>
             draw(e);
         }
 
-        // Event coordination trackers
         function stopDrawing() {
             isDrawing = false;
             const canvas = document.getElementById('drawingBoard');
