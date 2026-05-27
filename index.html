@@ -172,6 +172,7 @@
         .bg-notes { background: linear-gradient(135deg, #f59e0b, #b45309); }
         .bg-photos { background: linear-gradient(135deg, #ec4899, #be185d); }
         .bg-paint { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+        .bg-calendar { background: linear-gradient(135deg, #a855f7, #6366f1); }
 
         .app-label {
             font-size: 11px;
@@ -463,6 +464,10 @@
                     <div class="app-icon bg-paint">🎨</div>
                     <div class="app-label">Canvas</div>
                 </div>
+                <div class="app-icon-container" onclick="openApp('app-calendar')">
+                    <div class="app-icon bg-calendar">🗓️</div>
+                    <div class="app-label">Calendar</div>
+                </div>
             </div>
         </div>
 
@@ -586,6 +591,33 @@ Timothy ❤️</div>
                     <span>This tulips remind me of you soft, beautiful, comforting, and impossible to ignore. Just like them, you quietly made my life brighter without even trying. Every time I see tulips, I’m reminded of how lucky I am to have you. 🌸</span>
                     <button class="btn-reset" onclick="resetCanvas()">Reset</button>
                 </div>
+            </div>
+        </div>
+
+        <div class="window" id="app-calendar">
+            <div class="nav-bar">
+                <button class="btn-back" onclick="closeApp('app-calendar')">◀ Home</button>
+                <div class="nav-title">Calendar</div>
+            </div>
+            <div class="window-content" style="display: flex; flex-direction: column; gap: 20px; padding: 24px 16px;">
+                
+                <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-radius: 20px; padding: 24px; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                    <div style="font-size: 11px; color: var(--accent-color); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">Special Date</div>
+                    <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #ffffff;">Our Anniversary ❤️</h2>
+                    <div style="font-size: 14px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                        <span>🗓️ May 27, 2026</span>
+                        <span>•</span>
+                        <span>⏰ 8:55 PM</span>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.03); border-left: 4px solid var(--accent-color); padding: 16px 20px; border-radius: 4px 16px 16px 4px; text-align: left; line-height: 1.6;">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Note</div>
+                    
+                    <p style="font-size: 14px; color: rgba(255, 255, 255, 0.9); font-style: italic; white-space: pre-wrap;">I love you, and I hope you know how much this means to me. This will be one of the best days for me as we create more memories together. Thank you for giving me the trust that you don't give easily. I promise I will never break it, I might make mistakes but trust me, I will always make up for it and do my best to become better.</p> 
+</p>
+                </div>
+
             </div>
         </div>
 
